@@ -8,6 +8,8 @@
 #include <misc/stack.h>
 #include <gpio.h>
 #include <tc_util.h>
+#include <uart.h>
+#include <string.h>
 
 /* Local helpers and functions */
 #include "bt_storage.h"
@@ -17,6 +19,9 @@
 #include "hawkbit.h"
 #include "device.h"
 #include "tcp.h"
+
+#include "zephyr_getchar.h"
+#include "zephyr_getline.h"
 
 #define STACKSIZE 3840
 char threadStack[STACKSIZE];
@@ -164,8 +169,14 @@ void blink_led(void)
                         TC_END_REPORT(TC_PASS);
                 }
 		cnt++;
+
+		/* Polling UART, should be output from sensor hub via UART*/
+		char *s = zephyr_getline();
+		printk("line: %s\n", s);
+
 	}
 }
+
 
 void main(void)
 {
@@ -212,6 +223,10 @@ void main(void)
 	k_thread_spawn(&threadStack[0], STACKSIZE,
 			(k_thread_entry_t) fota_service,
 			NULL, NULL, NULL, K_PRIO_COOP(7), 0, K_NO_WAIT);
+
+
+    	zephyr_getline_init();
+	//zephyr_getchar_init();
 
 	TC_PRINT("Blinking LED\n");
 	blink_led();
